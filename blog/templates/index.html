@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    My blog
+{% endblock %}
+{% block css_files %}
+    <link rel="stylesheet" href="{% static 'blog/index.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/post.css' %}">
+{% endblock %}
+
+{% block content %}
+    <section id="welcome">
+        <header>
+            <img src="{% static 'blog/images/max.png' %}" alt="Denys - The Author Of This Page">
+            <h2>Wellcome to My racing blog</h2>
+        </header>
+        <p>Here I will tell about my racing experience</p>
+    </section>
+    <section id="latest-posts">
+        <h2>My Latest Thoughts</h2>
+        <ul>
+            {% for post in posts %}
+                {% include 'includes/post.html' %}
+            {% endfor %}
+        </ul>
+    </section>
+    <section id="about">
+        <h2>What I do</h2>
+        <p>I am fond of racing, especial carting</p>
+    </section>
+{% endblock %}
