@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 from blog.models import Post
 
@@ -14,16 +14,22 @@ def index(request):
 
 
 def posts(request):
+    all_posts = Post.objects.all().order_by('-date')
     return render(request, 'all-posts.html', {
-        "all_posts": posts_data
+        "all_posts": all_posts
     })
 
 
 def post_detail(request, slug):
-    try:
-        founded_post = next(post for post in posts_data if post['slug'] == slug)
-        return render(request, 'post-details.html', {
-            "post": founded_post
-        })
-    except StopIteration:
-        return render(request, '404.html')
+    post_details = get_object_or_404(Post, slug=slug)
+    return render(request, 'post-details.html', {
+        "post": post_details,
+        "tags": post_details.tags.all()
+    })
+    # try:
+    #     founded_post = next(post for post in posts_data if post['slug'] == slug)
+    #     return render(request, 'post-details.html', {
+    #         "post": founded_post
+    #     })
+    # except StopIteration:
+    #     return render(request, '404.html')
