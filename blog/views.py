@@ -1,28 +1,13 @@
-from datetime import date
-
-from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
+
+from blog.models import Post
+
 
 # Create your views here.
 
-posts_data = [
-    {
-        "slug": "hike-in-the-mountains",
-        "image": "mountains.jpg",
-        "author": "Denys",
-        "date": date(2021, 7, 21),
-        "title": "Mountain Hiking",
-        "excerpt": "Some text",
-        "content": """
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias aspernatur beatae eius iure iusto porro quasi
-            sunt vero. A debitis dignissimos dolorem magnam magni quidem quisquam rerum vero voluptas voluptatum.
-        """
-    }
-]
-
-
 def index(request):
-    latest_posts = sorted(posts_data, key=lambda item: item["date"], reverse=True)[:3]
+    latest_posts = Post.objects.all().order_by('-date')[:3]
+    # latest_posts = sorted(posts, key=lambda item: item["date"], reverse=True)[-3:]
     return render(request, 'index.html', {
         "posts": latest_posts
     })
