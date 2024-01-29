@@ -1,6 +1,10 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
+from django.views import View
 from django.views.generic import ListView, DetailView
 
+from blog.forms import CommentForm
 from blog.models import Post
 
 
@@ -41,15 +45,58 @@ class AllPostsView(ListView):
 #     })
 
 
-class SinglePostView(DetailView):
+class SinglePostView(View):
     # post_detail
-    template_name = 'post-details.html'
-    model = Post
+    # template_name = 'post-details.html'
+    # model = Post
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['tags'] = self.object.tags.all()
-        return context
+    def is_stored_post(self, request, post_id):
+        stored_posts = request.session.get('stored_posts')
+
+        if stored_posts is not None and len(stored_posts) != 0:
+            is_saved_for_later = post_id in stored_posts
+        else:
+            is_saved_for_later = False
+
+        return is_saved_for_later
+
+    def get(self, request, slug):
+        post = Post.objects.get(slug=slug)
+
+        context = {
+            'post': post,
+            'tags': post.tags.all(),
+            'comment_form': CommentForm(),
+            'comments': post.comments.all().order_by('-id'),
+            'is_saved_for_later': self.is_stored_post(request, post.id),
+        }
+        return render(request, 'post-details.html', context)
+
+    def post(self, request, slug):
+        comment_form = CommentForm(request.POST)
+        post = Post.objects.get(slug=slug)
+
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.post = post
+            comment.save()
+            return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+
+        context = {
+            'post': post,
+            'tags': post.tags.all(),
+            'comment_form': comment_form,
+            'comments': post.comments.all().order_by('-id'),
+            'is_saved_for_later': self.is_stored_post(request, post.id),
+        }
+        return render(request, "post-details.html", context)
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['tags'] = self.object.tags.all()
+    #     context['comment_form'] = CommentForm()
+    #     return context
+
 
 # def post_detail(request, slug):
 #     post_details = get_object_or_404(Post, slug=slug)
@@ -65,3 +112,35 @@ class SinglePostView(DetailView):
 #     })
 # except StopIteration:
 #     return render(request, '404.html')
+
+class ReadLaterView(View):
+    def post(self, request):
+        stored_posts = request.session.get('stored_posts')
+
+        if stored_posts is None:
+            stored_posts = []
+
+        post_id = int(request.POST.get('post_id'))
+
+        if post_id not in stored_posts:
+            stored_posts.append(post_id)
+        else:
+            stored_posts.remove(post_id)
+
+        request.session['stored_posts'] = stored_posts
+
+        return HttpResponseRedirect(reverse("main-page"))
+
+    def get(self, request):
+        stored_posts = request.session.get('stored_posts')
+
+        context = {}
+
+        if stored_posts is None or len(stored_posts) == 0:
+            context['posts'] = []
+            context['has_posts'] = False
+        else:
+            context['has_posts'] = True
+            context['posts'] = Post.objects.filter(id__in=stored_posts)
+
+        return render(request, "stored_posts.html", context)
