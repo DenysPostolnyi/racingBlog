@@ -24,6 +24,10 @@ SECRET_KEY = 'django-insecure-tcq+oq%_(jz_yi*or*c280hvr6jpcu3m($kuhdn*htqy7ex*)!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# for deployment
+# DEBUG = False
+
+# CORS
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -111,7 +115,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
+# for deployment
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 STATIC_URL = 'static/'
+
 STATICFILES_DIRS = [
     BASE_DIR / 'static/'
 ]
@@ -122,5 +130,4 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = BASE_DIR / 'uploads'
-
 MEDIA_URL = '/files/'
