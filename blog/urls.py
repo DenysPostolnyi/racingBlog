@@ -8,4 +8,6 @@ urlpatterns = [
     path('posts/<str:slug>', views.SinglePostView.as_view(), name='post-detail-page'),
     path('read-later', views.ReadLaterView.as_view(), name='read-later'),
     path('stored-posts', views.ReadLaterView.as_view(), name='stored-posts-page'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
 ]
