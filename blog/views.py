@@ -17,9 +17,11 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/posts')
+            return redirect('/')
         else:
-            return HttpResponse(status=400)
+            return render(request, 'login.html', {
+                'error': "Login or password is incorrect"
+            })
     return render(request, 'login.html')
 
 
