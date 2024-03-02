@@ -38,6 +38,12 @@
                 </button>
             </form>
         </div>
+        <div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'edit-post' post.slug %}">Edit post</a>
+            {% endif %}
+        </div>
+
         <article>
             <img src="{{ post.image_name.url }}" alt="{{ post.title }}">
             <address>By <a href="mailto:{{ post.author.email_address }}">{{ post.author }}</a></address>
@@ -52,16 +58,18 @@
         {{ post.content|linebreaks }}
     </main>
 
-    <section id="comments">
-        <ul>
-            {% for comment in comments %}
-                <li>
-                    <h2>{{ comment.user_name }}</h2>
-                    <p>{{ comment.text|linebreaks }}</p>
-                </li>
-            {% endfor %}
-        </ul>
-    </section>
+    {% if comments > 0 %}
+        <section id="comments">
+            <ul>
+                {% for comment in comments %}
+                    <li>
+                        <h2>{{ comment.user_name }}</h2>
+                        <p>{{ comment.text|linebreaks }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
 
     <section id="comment-form">
         <h2>Your comment</h2>
