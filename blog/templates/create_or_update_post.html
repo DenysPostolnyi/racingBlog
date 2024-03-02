@@ -6,7 +6,7 @@
 
 {% block css_files %}
     <link rel="stylesheet" href="{% static 'blog/post.css' %}">
-    <link rel="stylesheet" href="{% static 'blog/post-detail.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/create-or-update-post.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
             <h2>Add post</h2>
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data"
+        <form method="post" class="edit-post" enctype="multipart/form-data"
               {% if post_slug != None %}action="{% url 'edit-post' post_slug %}" {% else %}
               action="{% url 'edit-post' %}"{% endif %}>
             {% csrf_token %}
