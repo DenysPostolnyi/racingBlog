@@ -8,7 +8,7 @@ from django.views import View
 from django.views.generic import ListView
 
 from blog.forms import CommentForm, PostForm
-from blog.models import Post, Tag
+from blog.models import Post, Tag, Author
 
 
 # Create your views here.
@@ -143,7 +143,9 @@ class CreateOrUpdatePost(LoginRequiredMixin, View):
             form = self.form_class(request.POST, request.FILES)
 
         if form.is_valid():
+            author = Author.objects.first()
             post = form.save(commit=False)
+            post.author = author
             post.slug = slugify(post.title)
             post.save()
             return redirect(reverse('post-detail-page', args=[post.slug]))
