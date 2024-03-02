@@ -146,6 +146,7 @@ class CreateOrUpdatePost(LoginRequiredMixin, View):
             author = Author.objects.first()
             post = form.save(commit=False)
             post.author = author
+            post.tags.set(form.cleaned_data['tags'])
             post.slug = slugify(post.title)
             post.save()
             return redirect(reverse('post-detail-page', args=[post.slug]))
