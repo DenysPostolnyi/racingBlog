@@ -1,12 +1,14 @@
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect, HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.text import slugify
 from django.views import View
 from django.views.generic import ListView
 
-from blog.forms import CommentForm
-from blog.models import Post
+from blog.forms import CommentForm, PostForm
+from blog.models import Post, Tag
 
 
 # Create your views here.
@@ -116,6 +118,37 @@ class SinglePostView(View):
     #     context['tags'] = self.object.tags.all()
     #     context['comment_form'] = CommentForm()
     #     return context
+
+
+class CreateOrUpdatePost(LoginRequiredMixin, View):
+    template_name = 'create_or_update_post.html'
+    form_class = PostForm
+
+    def get(self, request, slug=None):
+        if slug:
+            post = Post.objects.get(slug=slug)
+            form = self.form_class(instance=post)
+            form.fields['tags'].queryset = Tag.objects.all()
+        else:
+            form = self.form_class()
+            form.fields['tags'].queryset = Tag.objects.all()
+
+        return render(request, self.template_name, {'form': form, 'post_slug': slug})
+
+    def post(self, request, slug=None):
+        if slug:
+            post = Post.objects.get(slug=slug)
+            form = self.form_class(request.POST, request.FILES, instance=post)
+        else:
+            form = self.form_class(request.POST, request.FILES)
+
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.slug = slugify(post.title)
+            post.save()
+            return redirect(reverse('post-detail-page', args=[post.slug]))
+
+        return render(request, self.template_name, {'form': form})
 
 
 # def post_detail(request, slug):

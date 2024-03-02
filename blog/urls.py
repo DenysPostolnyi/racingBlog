@@ -10,4 +10,6 @@ urlpatterns = [
     path('stored-posts', views.ReadLaterView.as_view(), name='stored-posts-page'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('edit-post/<str:slug>', views.CreateOrUpdatePost.as_view(), name='edit-post'),
+    path('edit-post/', views.CreateOrUpdatePost.as_view(), name='edit-post'),
 ]
