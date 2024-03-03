@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+    Edit post
+{% endblock %}
+
+{% block css_files %}
+    <link rel="stylesheet" href="{% static 'blog/post.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/create-or-update-post.css' %}">
+{% endblock %}
+
+{% block content %}
+    <section>
+        {% if post_slug != None %}
+            <h2>Edit post</h2>
+        {% else %}
+            <h2>Add post</h2>
+        {% endif %}
+
+        <form method="post" class="edit-post" enctype="multipart/form-data"
+              {% if post_slug != None %}action="{% url 'edit-post' post_slug %}" {% else %}
+              action="{% url 'edit-post' %}"{% endif %}>
+            {% csrf_token %}
+            {% for form_field in form %}
+                <div class="form-control {% if form_field.errors %}invalid{% endif %}">
+                    {{ form_field.label_tag }}
+                    {{ form_field }}
+                    {{ form_field.errors }}
+                </div>
+            {% endfor %}
+            <button>Save</button>
+        </form>
+    </section>
+{% endblock %}

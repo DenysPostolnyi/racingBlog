@@ -1,14 +1,36 @@
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.text import slugify
 from django.views import View
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView
 
-from blog.forms import CommentForm
-from blog.models import Post
+from blog.forms import CommentForm, PostForm
+from blog.models import Post, Tag, Author
 
 
 # Create your views here.
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('/')
+        else:
+            return render(request, 'login.html', {
+                'error': "Login or password is incorrect"
+            })
+    return render(request, 'login.html')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('/')
+
 
 class StartingPageView(ListView):
     # index
@@ -73,29 +95,68 @@ class SinglePostView(View):
         return render(request, 'post-details.html', context)
 
     def post(self, request, slug):
-        comment_form = CommentForm(request.POST)
         post = Post.objects.get(slug=slug)
 
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.save()
-            return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+        if request.POST.get('action') and request.POST.get('action') == 'delete':
+            post.delete()
+            return redirect(reverse('posts-page'))
+        else:
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.post = post
+                comment.save()
+                return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
 
-        context = {
-            'post': post,
-            'tags': post.tags.all(),
-            'comment_form': comment_form,
-            'comments': post.comments.all().order_by('-id'),
-            'is_saved_for_later': self.is_stored_post(request, post.id),
-        }
-        return render(request, "post-details.html", context)
+            context = {
+                'post': post,
+                'tags': post.tags.all(),
+                'comment_form': comment_form,
+                'comments': post.comments.all().order_by('-id'),
+                'is_saved_for_later': self.is_stored_post(request, post.id),
+            }
+            return render(request, "post-details.html", context)
+
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
     #     context['tags'] = self.object.tags.all()
     #     context['comment_form'] = CommentForm()
     #     return context
+
+
+class CreateOrUpdatePost(LoginRequiredMixin, View):
+    template_name = 'create_or_update_post.html'
+    form_class = PostForm
+
+    def get(self, request, slug=None):
+        if slug:
+            post = Post.objects.get(slug=slug)
+            form = self.form_class(instance=post)
+            form.fields['tags'].queryset = Tag.objects.all()
+        else:
+            form = self.form_class()
+            form.fields['tags'].queryset = Tag.objects.all()
+
+        return render(request, self.template_name, {'form': form, 'post_slug': slug})
+
+    def post(self, request, slug=None):
+        if slug:
+            post = Post.objects.get(slug=slug)
+            form = self.form_class(request.POST, request.FILES, instance=post)
+        else:
+            form = self.form_class(request.POST, request.FILES)
+
+        if form.is_valid():
+            author = Author.objects.first()
+            post = form.save(commit=False)
+            post.author = author
+            post.tags.set(form.cleaned_data['tags'])
+            post.slug = slugify(post.title)
+            post.save()
+            return redirect(reverse('post-detail-page', args=[post.slug]))
+
+        return render(request, self.template_name, {'form': form})
 
 
 # def post_detail(request, slug):
