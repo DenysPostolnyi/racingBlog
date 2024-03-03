@@ -47,7 +47,9 @@ class StartingPageView(ListView):
 
 # def index(request):
 #     latest_posts = Post.objects.all().order_by('-date')[:3]
-#     # latest_posts = sorted(posts, key=lambda item: item["date"], reverse=True)[-3:]
+#     # latest_posts = sorted(
+#     posts, key=lambda item: item["date"], reverse=True
+#     )[-3:]
 #     return render(request, 'index.html', {
 #         "posts": latest_posts
 #     })
@@ -97,7 +99,8 @@ class SinglePostView(View):
     def post(self, request, slug):
         post = Post.objects.get(slug=slug)
 
-        if request.POST.get('action') and request.POST.get('action') == 'delete':
+        if (request.POST.get('action') and
+                request.POST.get('action') == 'delete'):
             post.delete()
             return redirect(reverse('posts-page'))
         else:
@@ -106,7 +109,9 @@ class SinglePostView(View):
                 comment = comment_form.save(commit=False)
                 comment.post = post
                 comment.save()
-                return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+                return HttpResponseRedirect(
+                    reverse("post-detail-page", args=[slug])
+                )
 
             context = {
                 'post': post,
@@ -116,7 +121,6 @@ class SinglePostView(View):
                 'is_saved_for_later': self.is_stored_post(request, post.id),
             }
             return render(request, "post-details.html", context)
-
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
@@ -138,7 +142,13 @@ class CreateOrUpdatePost(LoginRequiredMixin, View):
             form = self.form_class()
             form.fields['tags'].queryset = Tag.objects.all()
 
-        return render(request, self.template_name, {'form': form, 'post_slug': slug})
+        return render(
+            request, self.template_name,
+            {
+                'form': form,
+                'post_slug': slug
+            }
+        )
 
     def post(self, request, slug=None):
         if slug:
