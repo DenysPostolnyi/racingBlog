@@ -95,23 +95,28 @@ class SinglePostView(View):
         return render(request, 'post-details.html', context)
 
     def post(self, request, slug):
-        comment_form = CommentForm(request.POST)
         post = Post.objects.get(slug=slug)
 
-        if comment_form.is_valid():
-            comment = comment_form.save(commit=False)
-            comment.post = post
-            comment.save()
-            return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
+        if request.POST.get('action') and request.POST.get('action') == 'delete':
+            post.delete()
+            return redirect(reverse('posts-page'))
+        else:
+            comment_form = CommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.post = post
+                comment.save()
+                return HttpResponseRedirect(reverse("post-detail-page", args=[slug]))
 
-        context = {
-            'post': post,
-            'tags': post.tags.all(),
-            'comment_form': comment_form,
-            'comments': post.comments.all().order_by('-id'),
-            'is_saved_for_later': self.is_stored_post(request, post.id),
-        }
-        return render(request, "post-details.html", context)
+            context = {
+                'post': post,
+                'tags': post.tags.all(),
+                'comment_form': comment_form,
+                'comments': post.comments.all().order_by('-id'),
+                'is_saved_for_later': self.is_stored_post(request, post.id),
+            }
+            return render(request, "post-details.html", context)
+
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
